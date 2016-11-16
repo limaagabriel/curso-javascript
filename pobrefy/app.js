@@ -10,7 +10,30 @@ app.get("/", function(request, response) {
 });
 
 app.get("/login", function(request, response) {
-	response.end("página de login");
+	response.render("login");
+});
+
+app.post("/login", function(request, response) {
+	//pegar os dados do formulário
+	var connection = mysql.createConnection({
+		host: "localhost",
+		database: "pobrefy",
+		user: "root",
+		password: ""
+	});
+
+	var form = formidable.IncomingForm();
+	form.parse(request, function(err, fields) {
+		//verificar se ele está cadastrado
+		connection.query("SELECT * FROM usuarios " +
+			"WHERE email = ?", [fields.email],
+			function(err, resultados) {
+				console.log(resultados);
+		});
+		//verificar a senha
+		//redirecionar para o lugar certo
+		response.redirect("/login");	
+	});
 });
 
 app.get("/cadastro", function(request, response) {
