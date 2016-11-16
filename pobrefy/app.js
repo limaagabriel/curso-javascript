@@ -2,6 +2,14 @@ var express = require("express");
 var app = express();
 var formidable = require("formidable");
 var mysql = require("mysql2");
+var session = require("express-session");
+var auth = require("./auth");
+
+app.use(session({
+	secret: "salnoolhodocamarao",
+	resave: false,
+	saveUninitialized: false
+}));
 
 app.set("view engine", "ejs");
 
@@ -11,6 +19,10 @@ app.get("/", function(request, response) {
 
 app.get("/login", function(request, response) {
 	response.render("login");
+});
+
+app.get("/dashboard", auth, function(request, response) {
+	response.render("bemvindo");
 });
 
 app.post("/login", function(request, response) {
@@ -28,11 +40,22 @@ app.post("/login", function(request, response) {
 		connection.query("SELECT * FROM usuarios " +
 			"WHERE email = ?", [fields.email],
 			function(err, resultados) {
-				console.log(resultados);
-		});
+				if(resultados.length == 0) {
+					response.redirect("/cadastro");
+				}
+				else {
+					var usuario = resultados[0];
+					if(usuario.password == fields.password) {
+						request.session.user = usuario;
+						response.redirect("/dashboard");
+					}
+					else {
+						response.redirect("/login");
+					}
+				}
+			});
 		//verificar a senha
 		//redirecionar para o lugar certo
-		response.redirect("/login");	
 	});
 });
 
