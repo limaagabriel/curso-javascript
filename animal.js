@@ -10,6 +10,7 @@ var cao = {
 		console.log("yuuummm");
 	}
 };
+
 console.log(cao);
 console.log(cao.raca);
 console.log(cao.nome);
