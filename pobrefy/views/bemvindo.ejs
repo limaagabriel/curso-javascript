@@ -4,6 +4,19 @@
 	<title></title>
 </head>
 <body>
-	<h1>Bem vindo, <%= user.password %>!</h1>
+	<h1>Bem vindo, <%= user.firstName %>!</h1>
+
+	<ul>
+	<% for(var i = 0; i < musicas.length; i++) { %>
+		<li>
+			<%= musicas[i].title %>
+			<audio controls="controls" class="player">
+                <source type="<%= musicas[i].type %>" 
+                src="/music?path=<%= musicas[i].path%>">
+            </audio>		
+		</li>
+
+	<% } %>
+	</ul>
 </body>
 </html>

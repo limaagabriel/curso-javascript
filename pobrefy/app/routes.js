@@ -1,6 +1,7 @@
 var formidable = require("formidable");
 var mysql = require("mysql2");
 var auth = require("../auth");
+var fs = require("fs");
 
 module.exports = function(app) {
 	app.get("/", function(request, response) {
@@ -12,12 +13,74 @@ module.exports = function(app) {
 	});
 
 	app.get("/dashboard", auth, function(request, response) {
-		response.render("bemvindo");
+		//pegar as músicas do usuário logado
+		var connection = mysql.createConnection({
+			host: "localhost",
+			database: "pobrefy",
+			user: "root",
+			password: ""
+		});
+
+		var id = request.session.user.id;
+
+		connection.query("SELECT * FROM " +
+			"musicas WHERE uploader = ?",
+			[id], 
+			function(err, resultados) {
+
+			var locals = {
+				musicas: resultados
+			};
+
+			//Passar para a página
+			response.render("bemvindo", locals);
+		});
+
+	});
+
+	app.get("/music", auth, function(request, response) {
+		var path = request.query.path;
+		fs.createReadStream(path)
+			.pipe(response);
 	});
 
 	app.get("/logout", auth, function(request, response) {
 		delete request.session.user;
 		response.redirect("/login");
+	});
+
+	app.get("/add", auth, function(request, response) {
+		response.render("add");
+ 	});
+
+	app.post("/add", function(request, response) {
+		var form = formidable.IncomingForm();
+		var connection = mysql.createConnection({
+			host: "localhost",
+			database: "pobrefy",
+			user: "root",
+			password: ""
+		});
+
+		form.uploadDir = "./storage";
+		form.keepExtensions = true;
+
+		form.parse(request, function(err, fields, files) {
+			console.log(fields.title);
+			console.log(fields.author);
+			console.log(files);
+
+			connection.query("INSERT INTO musicas " +
+				"(title, author, path, uploader, type) " +
+				"VALUES (?, ?, ?, ?, ?)",
+				[fields.title, fields.author,
+				files.music.path,
+				request.session.user.id,
+				files.music.type], function(err) {
+					connection.close();
+					response.redirect("/dashboard");
+			});
+		});
 	});
 
 	app.post("/login", function(request, response) {
